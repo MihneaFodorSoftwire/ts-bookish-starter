@@ -12,7 +12,7 @@ export class Book {
 }
 
 export async function getAllBooks(): Promise<Book[]> {
-    const pool = await poolPromise;
+    const pool: any = await poolPromise;
     const result = await pool
         .request()
         .query('SELECT isbn, title, id FROM book');
