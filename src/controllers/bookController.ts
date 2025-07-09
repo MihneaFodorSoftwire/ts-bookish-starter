@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
-import { getAllBooks } from './book';
+import { Book, getAllBooks } from './book';
 import { getBookById } from './bookid';
+import { createBook } from './createBook';
 
 class BookController {
     router: Router;
@@ -31,12 +32,27 @@ class BookController {
         }
     }
 
-    createBook(req: Request, res: Response) {
-        // TODO: implement functionality
-        return res.status(500).json({
-            error: 'server_error',
-            error_description: 'Endpoint not implemented yet.',
-        });
+    async createBook(req: Request, res: Response) {
+        const isbn = typeof req.query.isbn === 'string' ? req.query.isbn : '';
+        const title =
+            typeof req.query.title === 'string' ? req.query.title : '';
+        const totalCopies =
+            req.query.totalCopies && !isNaN(Number(req.query.totalCopies))
+                ? parseInt(req.query.totalCopies as string)
+                : 0;
+
+        if (!isbn || !title || typeof totalCopies !== 'number') {
+            return res.status(400).json({ error: 'Missing or invalid fields' });
+        }
+
+        try {
+            const book = new Book(isbn, title, totalCopies);
+            await createBook(book);
+            res.status(201).json({ message: 'Book created successfully' });
+        } catch (error) {
+            console.error('Error creating book:', error);
+            res.status(500).json({ error: 'Internal Server Error' });
+        }
     }
 
     async getAllBooks(req: Request, res: Response) {
