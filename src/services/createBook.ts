@@ -1,4 +1,4 @@
-import poolPromise from './db'; // adjust the path if needed
+import poolPromise from '../database/db'; // adjust the path if needed
 import sql from 'mssql';
 import { Book } from './book'; // reuse your Book class
 

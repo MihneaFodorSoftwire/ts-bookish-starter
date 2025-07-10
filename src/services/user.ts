@@ -1,7 +1,14 @@
 import sql from 'mssql';
-import { User } from './user';
-import poolPromise from './db';
+import poolPromise from '../database/db';
 import bcrypt from 'bcrypt';
+
+export class User {
+    constructor(
+        public id: number,
+        public name: string,
+        public password: string,
+    ) {}
+}
 
 export async function getUserByUsername(name: string): Promise<User | null> {
     const pool: any = await poolPromise;

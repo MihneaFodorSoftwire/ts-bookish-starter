@@ -1,4 +1,4 @@
-import poolPromise from './db';
+import poolPromise from '../database/db';
 import { Book } from './book';
 import sql from 'mssql';
 

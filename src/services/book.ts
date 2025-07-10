@@ -1,4 +1,4 @@
-import poolPromise from './db';
+import poolPromise from '../database/db';
 
 export class Book {
     isbn: string;

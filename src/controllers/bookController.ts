@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
-import { Book, getAllBooks } from './book';
-import { getBookById } from './bookid';
-import { createBook } from './createBook';
+import { Book, getAllBooks } from '../services/book';
+import { getBookById } from '../services/bookid';
+import { createBook } from '../services/createBook';
 
 class BookController {
     router: Router;
