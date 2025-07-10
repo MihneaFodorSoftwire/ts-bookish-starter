@@ -1,21 +1,7 @@
-import { Router, Response } from 'express';
-import { Connection, Request} from 'tedious';
-import { Book } from './book';
-
-const config = {
-    server: 'MAYFLY',
-    authentication: {
-        type: 'default' as const,
-        options: {
-            userName: 'testerPro',
-            password: 'secret',
-        },
-    },
-    options: {
-        database: 'bookish',
-        trustServerCertificate: true,
-    },
-};
+import { Router, Request, Response } from 'express';
+import { Book, getAllBooks } from '../services/book';
+import { getBookById } from '../services/bookid';
+import { createBook } from '../services/createBook';
 
 class BookController {
     router: Router;
@@ -27,61 +13,56 @@ class BookController {
         this.router.get('/', this.getAllBooks.bind(this));
     }
 
-    getBook(req: Request, res: Response) {
-        // TODO: implement functionality
-        return res.status(500).json({
-            error: 'server_error',
-            error_description: 'Endpoint not implemented yet.',
-        });
-    }
+    async getBook(req: Request, res: Response) {
+        const id = parseInt(req.params.id);
 
-    createBook(req: Request, res: Response) {
-        // TODO: implement functionality
-        return res.status(500).json({
-            error: 'server_error',
-            error_description: 'Endpoint not implemented yet.',
-        });
-    }
+        if (isNaN(id)) {
+            return res.status(400).json({ error: 'Invalid ID' });
+        }
 
-    getAllBooks(req: Request, res: Response) {
-        const connection = new Connection(config);
-        connection.connect();
-        const books: Book[] = [];
-
-        connection.on('connect', (err) => {
-            console.log("here1");
-            if (err) {
-                console.error('Connection failed:', err);
-                res.status(500).json('Connection error');
-                return;
+        try {
+            const book = await getBookById(id);
+            if (!book) {
+                return res.status(404).json({ error: 'Book not found' });
             }
-            console.log("here2");
-            const request = new Request('SELECT isbn, title, total_copies FROM book',
-                (err) => {
-                    if (err) {
-                        console.error('Query failed:', err);
-                    } else {
-                        res.json(books);
-                    }
-                    connection.close();
-                },
-            );
+            res.json(book);
+        } catch (error) {
+            console.error('Error fetching book:', error);
+            res.status(500).json({ error: 'Internal Server Error' });
+        }
+    }
 
-            console.log("here3");
-            request.on('row', (columns) => {
-                const book = new Book(
-                    columns[0].value,
-                    columns[1].value,
-                    columns[2].value,
-                );
-                books.push(book);
-            });
+    async createBook(req: Request, res: Response) {
+        const isbn = typeof req.query.isbn === 'string' ? req.query.isbn : '';
+        const title =
+            typeof req.query.title === 'string' ? req.query.title : '';
+        const totalCopies =
+            req.query.totalCopies && !isNaN(Number(req.query.totalCopies))
+                ? parseInt(req.query.totalCopies as string)
+                : 0;
 
-            connection.execSql(request);
-        });
-        console.log("here4");
-        books.push(new Book('1', 'Get scammed', 1));
-        res.json(books);
+        if (!isbn || !title || typeof totalCopies !== 'number') {
+            return res.status(400).json({ error: 'Missing or invalid fields' });
+        }
+
+        try {
+            const book = new Book(isbn, title, totalCopies);
+            await createBook(book);
+            res.status(201).json({ message: 'Book created successfully' });
+        } catch (error) {
+            console.error('Error creating book:', error);
+            res.status(500).json({ error: 'Internal Server Error' });
+        }
+    }
+
+    async getAllBooks(req: Request, res: Response) {
+        try {
+            const books = await getAllBooks();
+            res.json(books);
+        } catch (error) {
+            console.error('Error fetching books:', error);
+            res.status(500).json({ error: 'Internal Server Error' });
+        }
     }
 }
 
